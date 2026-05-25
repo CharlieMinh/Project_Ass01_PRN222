@@ -651,3 +651,23 @@ How to debug next time:
 Get-Process | Where-Object { $_.ProcessName -eq 'Scientific.WebAppMVC' -or $_.ProcessName -eq 'dotnet' }
 Stop-Process -Id <PID> -Force
 ```
+
+## Repository Notes
+
+### 2026-05-25: Publish Project To GitHub
+
+Status: Completed.
+
+Repository:
+- https://github.com/CharlieMinh/Project_Ass01_PRN222.git
+
+Completed:
+- Added root `.gitignore` to exclude Visual Studio local files, build outputs, user-local config, and temporary files.
+- Created initial local commit for the full PRN222 project source.
+- Connected local Git repo to GitHub remote `origin`.
+- Merged the remote initial `README.md` commit from GitHub.
+- Pushed branch `main` to GitHub.
+
+Verification:
+- `git push -u origin main` completed successfully.
+- Remote tracking is set: local `main` tracks `origin/main`.
