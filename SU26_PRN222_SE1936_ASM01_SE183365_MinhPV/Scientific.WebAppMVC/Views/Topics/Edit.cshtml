@@ -1,0 +1,4 @@
+@model TopicsLuanNtk
+@{ ViewData["Title"] = "Edit Topic"; }
+<h1 class="h3 mb-3">Edit Topic</h1>
+<form asp-action="Edit" asp-route-id="@Model.TopicIdLuanNtk" method="post"><partial name="_Form" model="Model" /></form>

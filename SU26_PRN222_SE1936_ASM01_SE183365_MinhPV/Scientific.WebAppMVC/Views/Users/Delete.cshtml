@@ -1,0 +1,22 @@
+@model UsersHuyDd
+
+@{
+    ViewData["Title"] = "Delete User";
+}
+
+<h1 class="h3 text-danger">Delete User</h1>
+<p class="text-muted">Deleting a user can fail if related records exist. Lock the account instead when preserving demo data is important.</p>
+
+<dl class="row">
+    <dt class="col-sm-3">Full name</dt>
+    <dd class="col-sm-9">@Model.FullName</dd>
+    <dt class="col-sm-3">Email</dt>
+    <dd class="col-sm-9">@Model.Email</dd>
+    <dt class="col-sm-3">Roles</dt>
+    <dd class="col-sm-9">@string.Join(", ", Model.RoleIdHuyDds.Select(x => x.RoleName))</dd>
+</dl>
+
+<form asp-action="Delete" asp-route-id="@Model.UserIdHuyDd" method="post">
+    <button type="submit" class="btn btn-danger">Delete</button>
+    <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+</form>

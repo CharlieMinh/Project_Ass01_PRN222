@@ -1,0 +1,6 @@
+@model KeywordsLuanNtk
+@{ ViewData["Title"] = "Delete Keyword"; }
+<h1 class="h3 text-danger">Delete Keyword</h1>
+@if (Model.PaperIdBaoTgs.Any() || Model.Topics.Any()){<div class="alert alert-warning">This keyword has related papers or topics. Delete may be blocked.</div>}
+<p>Delete <strong>@Model.KeywordName</strong>?</p>
+<form asp-action="Delete" asp-route-id="@Model.KeywordIdLuanNtk" method="post"><button class="btn btn-danger">Delete</button> <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a></form>

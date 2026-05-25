@@ -1,0 +1,26 @@
+@model RolesHuyDd
+
+@{
+    ViewData["Title"] = "Delete Role";
+}
+
+<h1 class="h3 text-danger">Delete Role</h1>
+
+@if (Model.UserIdHuyDds.Any())
+{
+    <div class="alert alert-warning">
+        This role has @Model.UserIdHuyDds.Count assigned user(s). Remove those assignments before deleting the role.
+    </div>
+}
+
+<dl class="row">
+    <dt class="col-sm-3">Role name</dt>
+    <dd class="col-sm-9">@Model.RoleName</dd>
+    <dt class="col-sm-3">Description</dt>
+    <dd class="col-sm-9">@(Model.Description ?? "N/A")</dd>
+</dl>
+
+<form asp-action="Delete" asp-route-id="@Model.RoleIdHuyDd" method="post">
+    <button type="submit" class="btn btn-danger" disabled="@Model.UserIdHuyDds.Any()">Delete</button>
+    <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+</form>

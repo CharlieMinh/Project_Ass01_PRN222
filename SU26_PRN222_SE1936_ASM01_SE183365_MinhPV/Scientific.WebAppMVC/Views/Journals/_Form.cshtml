@@ -1,0 +1,9 @@
+@model JournalFormViewModel
+<div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+<input asp-for="JournalId" type="hidden" />
+<div class="row"><div class="col-md-8 mb-3"><label asp-for="JournalName" class="form-label"></label><input asp-for="JournalName" class="form-control" /><span asp-validation-for="JournalName" class="text-danger"></span></div><div class="col-md-4 mb-3"><label asp-for="PublisherId" class="form-label"></label><select asp-for="PublisherId" asp-items="Model.PublisherOptions" class="form-select"></select></div></div>
+<div class="row"><div class="col-md-3 mb-3"><label asp-for="Issn" class="form-label"></label><input asp-for="Issn" class="form-control" /></div><div class="col-md-3 mb-3"><label asp-for="Eissn" class="form-label"></label><input asp-for="Eissn" class="form-control" /></div><div class="col-md-3 mb-3"><label asp-for="ImpactFactor" class="form-label"></label><input asp-for="ImpactFactor" class="form-control" /></div><div class="col-md-3 mb-3"><label asp-for="Ranking" class="form-label"></label><input asp-for="Ranking" class="form-control" /></div></div>
+<div class="row"><div class="col-md-6 mb-3"><label asp-for="Country" class="form-label"></label><input asp-for="Country" class="form-control" /></div><div class="col-md-6 mb-3"><label asp-for="WebsiteUrl" class="form-label"></label><input asp-for="WebsiteUrl" class="form-control" /></div></div>
+<div class="mb-3"><label asp-for="Description" class="form-label"></label><textarea asp-for="Description" class="form-control" rows="4"></textarea></div>
+<div class="form-check form-switch mb-3"><input asp-for="IsActive" class="form-check-input" /><label asp-for="IsActive" class="form-check-label"></label></div>
+<button type="submit" class="btn btn-primary">Save</button> <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>

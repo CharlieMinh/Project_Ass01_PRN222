@@ -1,0 +1,4 @@
+@model AuthorsBaoTg
+@{ ViewData["Title"] = "Author Details"; }
+<div class="d-flex justify-content-between mb-3"><h1 class="h3">Author Details</h1><div><a asp-action="Edit" asp-route-id="@Model.AuthorIdBaoTg" class="btn btn-primary">Edit</a> <a asp-action="Index" class="btn btn-outline-secondary">Back</a></div></div>
+<dl class="row"><dt class="col-sm-3">Full name</dt><dd class="col-sm-9">@Model.FullName</dd><dt class="col-sm-3">Email</dt><dd class="col-sm-9">@(Model.Email ?? "N/A")</dd><dt class="col-sm-3">Affiliation</dt><dd class="col-sm-9">@(Model.Affiliation ?? "N/A")</dd><dt class="col-sm-3">Country</dt><dd class="col-sm-9">@(Model.Country ?? "N/A")</dd><dt class="col-sm-3">ORCID</dt><dd class="col-sm-9">@(Model.Orcid ?? "N/A")</dd><dt class="col-sm-3">Papers</dt><dd class="col-sm-9">@Model.PaperAuthorsBaoTgs.Count</dd></dl>

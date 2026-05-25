@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="mvc/mvc.csproj" Id="46992caf-b16c-4740-b504-f36da96e2b51" />
+  <Project Path="Scientific.Entities/Scientific.Entities.csproj" Id="415939d7-ed6d-4396-a87e-ad19dd22b3ab" />
+  <Project Path="Scientific.Repositories/Scientific.Repositories.csproj" Id="14631a29-7df7-4853-8453-2bb781cf5c3c" />
+  <Project Path="Scientific.Services/Scientific.Services.csproj" Id="2525792d-b02e-4f9e-99cc-785b786eab4f" />
+  <Project Path="Scientific.WebAppMVC/Scientific.WebAppMVC.csproj" Id="9b722dd2-f1a4-4c98-8186-31b116d9bba5" />
+</Solution>

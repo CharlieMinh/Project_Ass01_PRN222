@@ -1,0 +1,72 @@
+﻿@model Scientific.Entities.Models.JournalsMinhPv
+
+@{
+    ViewData["Title"] = "Create";
+}
+
+<h1>Create</h1>
+
+<h4>JournalsMinhPv</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="JournalName" class="control-label"></label>
+                <input asp-for="JournalName" class="form-control" />
+                <span asp-validation-for="JournalName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Issn" class="control-label"></label>
+                <input asp-for="Issn" class="form-control" />
+                <span asp-validation-for="Issn" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Eissn" class="control-label"></label>
+                <input asp-for="Eissn" class="form-control" />
+                <span asp-validation-for="Eissn" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="PublisherId" class="control-label"></label>
+                <select asp-for="PublisherId" class ="form-control" asp-items="ViewBag.PublisherId"></select>
+            </div>
+            <div class="form-group">
+                <label asp-for="Country" class="control-label"></label>
+                <input asp-for="Country" class="form-control" />
+                <span asp-validation-for="Country" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="WebsiteUrl" class="control-label"></label>
+                <input asp-for="WebsiteUrl" class="form-control" />
+                <span asp-validation-for="WebsiteUrl" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ImpactFactor" class="control-label"></label>
+                <input asp-for="ImpactFactor" class="form-control" />
+                <span asp-validation-for="ImpactFactor" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Ranking" class="control-label"></label>
+                <input asp-for="Ranking" class="form-control" />
+                <span asp-validation-for="Ranking" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Description" class="control-label"></label>
+                <input asp-for="Description" class="form-control" />
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

@@ -1,0 +1,6 @@
+@model CategoriesMinhPv
+@{ ViewData["Title"] = "Delete Category"; }
+<h1 class="h3 text-danger">Delete Category</h1>
+@if (Model.JournalIdMinhPvs.Any()){<div class="alert alert-warning">This category has @Model.JournalIdMinhPvs.Count journal(s). Delete may be blocked.</div>}
+<p>Delete <strong>@Model.CategoryName</strong>?</p>
+<form asp-action="Delete" asp-route-id="@Model.CategoryIdMinhPv" method="post"><button class="btn btn-danger">Delete</button> <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a></form>

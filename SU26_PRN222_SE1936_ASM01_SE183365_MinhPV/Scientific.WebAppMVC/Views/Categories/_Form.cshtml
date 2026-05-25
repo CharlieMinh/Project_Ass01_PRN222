@@ -1,0 +1,6 @@
+@model CategoriesMinhPv
+<div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+<input asp-for="CategoryIdMinhPv" type="hidden" /><input asp-for="CreatedAt" type="hidden" />
+<div class="mb-3"><label asp-for="CategoryName" class="form-label">Category name</label><input asp-for="CategoryName" class="form-control" /><span asp-validation-for="CategoryName" class="text-danger"></span></div>
+<div class="mb-3"><label asp-for="Description" class="form-label"></label><textarea asp-for="Description" class="form-control" rows="3"></textarea></div>
+<button type="submit" class="btn btn-primary">Save</button> <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>

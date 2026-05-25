@@ -1,0 +1,5 @@
+@model PaperFormViewModel
+@{ ViewData["Title"] = "Create Paper"; }
+<h1 class="h3 mb-3">Create Paper</h1>
+<form asp-action="Create" method="post"><partial name="_Form" model="Model" /></form>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

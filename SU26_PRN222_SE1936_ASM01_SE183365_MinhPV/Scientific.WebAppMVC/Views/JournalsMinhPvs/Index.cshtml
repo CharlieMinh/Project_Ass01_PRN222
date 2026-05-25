@@ -1,0 +1,95 @@
+﻿@model IEnumerable<Scientific.Entities.Models.JournalsMinhPv>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.JournalName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Issn)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Eissn)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Country)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.WebsiteUrl)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ImpactFactor)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Ranking)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Description)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.IsActive)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CreatedAt)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Publisher)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.JournalName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Issn)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Eissn)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Country)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.WebsiteUrl)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ImpactFactor)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Ranking)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Description)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.IsActive)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CreatedAt)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Publisher.PublisherName)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.JournalIdMinhPv">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.JournalIdMinhPv">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.JournalIdMinhPv">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

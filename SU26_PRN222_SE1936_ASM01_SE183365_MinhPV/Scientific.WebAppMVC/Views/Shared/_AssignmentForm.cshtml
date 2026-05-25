@@ -1,0 +1,52 @@
+@model ManyToManyAssignmentViewModel
+
+<div class="mb-3">
+    <h1 class="h3 mb-1">@Model.PageTitle</h1>
+    <p class="text-muted mb-0">@Model.EntityName</p>
+</div>
+
+<div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+<input asp-for="EntityId" type="hidden" />
+<input asp-for="EntityName" type="hidden" />
+<input asp-for="PageTitle" type="hidden" />
+<input asp-for="OptionLabel" type="hidden" />
+<input asp-for="BackController" type="hidden" />
+<input asp-for="BackAction" type="hidden" />
+<input asp-for="RequireAtLeastOne" type="hidden" />
+
+<div class="card">
+    <div class="card-body">
+        <h2 class="h5 mb-3">@Model.OptionLabel</h2>
+        <span asp-validation-for="SelectedIds" class="text-danger"></span>
+
+        @if (!Model.Options.Any())
+        {
+            <p class="text-muted mb-0">No options are available yet.</p>
+        }
+        else
+        {
+            <div class="row g-2">
+                @foreach (var option in Model.Options)
+                {
+                    <div class="col-md-6 col-lg-4">
+                        <div class="border rounded p-2 h-100">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="SelectedIds" value="@option.Id" id="option_@option.Id" checked="@option.IsSelected" />
+                                <label class="form-check-label fw-semibold" for="option_@option.Id">@option.Name</label>
+                            </div>
+                            @if (!string.IsNullOrWhiteSpace(option.Description))
+                            {
+                                <div class="small text-muted ms-4">@option.Description</div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+<div class="d-flex gap-2 mt-3">
+    <button type="submit" class="btn btn-primary">Save</button>
+    <a asp-controller="@Model.BackController" asp-action="@Model.BackAction" asp-route-id="@Model.EntityId" class="btn btn-outline-secondary">Cancel</a>
+</div>

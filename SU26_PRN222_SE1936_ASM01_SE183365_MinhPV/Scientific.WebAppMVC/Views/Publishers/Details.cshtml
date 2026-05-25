@@ -1,0 +1,4 @@
+@model Publisher
+@{ ViewData["Title"] = "Publisher Details"; }
+<div class="d-flex justify-content-between mb-3"><h1 class="h3">Publisher Details</h1><div><a asp-action="Edit" asp-route-id="@Model.PublisherId" class="btn btn-primary">Edit</a> <a asp-action="Index" class="btn btn-outline-secondary">Back</a></div></div>
+<dl class="row"><dt class="col-sm-3">Name</dt><dd class="col-sm-9">@Model.PublisherName</dd><dt class="col-sm-3">Country</dt><dd class="col-sm-9">@(Model.Country ?? "N/A")</dd><dt class="col-sm-3">Website</dt><dd class="col-sm-9">@(Model.WebsiteUrl ?? "N/A")</dd><dt class="col-sm-3">Journals</dt><dd class="col-sm-9">@Model.JournalsMinhPvs.Count</dd></dl>

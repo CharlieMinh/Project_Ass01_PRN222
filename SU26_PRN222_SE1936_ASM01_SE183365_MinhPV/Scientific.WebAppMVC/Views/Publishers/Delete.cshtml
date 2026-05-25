@@ -1,0 +1,6 @@
+@model Publisher
+@{ ViewData["Title"] = "Delete Publisher"; }
+<h1 class="h3 text-danger">Delete Publisher</h1>
+@if (Model.JournalsMinhPvs.Any()){<div class="alert alert-warning">This publisher has @Model.JournalsMinhPvs.Count journal(s). Delete may be blocked.</div>}
+<p>Delete <strong>@Model.PublisherName</strong>?</p>
+<form asp-action="Delete" asp-route-id="@Model.PublisherId" method="post"><button class="btn btn-danger">Delete</button> <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a></form>

@@ -1,0 +1,4 @@
+@model CategoriesMinhPv
+@{ ViewData["Title"] = "Edit Category"; }
+<h1 class="h3 mb-3">Edit Category</h1>
+<form asp-action="Edit" asp-route-id="@Model.CategoryIdMinhPv" method="post"><partial name="_Form" model="Model" /></form>

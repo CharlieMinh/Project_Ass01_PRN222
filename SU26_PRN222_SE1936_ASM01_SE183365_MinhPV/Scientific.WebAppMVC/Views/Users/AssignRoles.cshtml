@@ -1,0 +1,9 @@
+@model ManyToManyAssignmentViewModel
+
+@{
+    ViewData["Title"] = "Assign Roles";
+}
+
+<form asp-action="AssignRoles" asp-route-id="@Model.EntityId" method="post">
+    <partial name="_AssignmentForm" model="Model" />
+</form>

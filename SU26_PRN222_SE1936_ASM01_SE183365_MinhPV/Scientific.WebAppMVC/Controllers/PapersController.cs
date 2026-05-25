@@ -1,0 +1,336 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
+using Scientific.Entities.Models;
+using Scientific.WebAppMVC.Authorization;
+using Scientific.WebAppMVC.ViewModels;
+using System.Security.Claims;
+
+namespace Scientific.WebAppMVC.Controllers
+{
+    [Authorize(Policy = AppPolicies.DataManager)]
+    public class PapersController : Controller
+    {
+        private readonly ScientificJournalTrendDBContext _context;
+
+        public PapersController(ScientificJournalTrendDBContext context) => _context = context;
+
+        public async Task<IActionResult> Index(string? search)
+        {
+            var query = _context.PapersBaoTgs.Include(x => x.JournalIdMinhPvNavigation).AsQueryable();
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                query = query.Where(x =>
+                    x.Title.Contains(search) ||
+                    (x.Doi != null && x.Doi.Contains(search)) ||
+                    (x.JournalIdMinhPvNavigation != null && x.JournalIdMinhPvNavigation.JournalName.Contains(search)));
+            }
+            ViewBag.Search = search;
+            return View(await query.OrderByDescending(x => x.PublicationYear).ThenBy(x => x.Title).ToListAsync());
+        }
+
+        public async Task<IActionResult> Details(int id)
+        {
+            var paper = await _context.PapersBaoTgs
+                .Include(x => x.JournalIdMinhPvNavigation)
+                .Include(x => x.CreatedByHuyDdNavigation)
+                .Include(x => x.PaperMetric)
+                .Include(x => x.PaperAuthorsBaoTgs).ThenInclude(x => x.AuthorIdBaoTgNavigation)
+                .Include(x => x.Keywords)
+                .FirstOrDefaultAsync(x => x.PaperIdBaoTg == id);
+            return paper == null ? NotFound() : View(paper);
+        }
+
+        public async Task<IActionResult> AssignAuthors(int id)
+        {
+            var paper = await _context.PapersBaoTgs
+                .Include(x => x.PaperAuthorsBaoTgs)
+                .FirstOrDefaultAsync(x => x.PaperIdBaoTg == id);
+
+            if (paper == null)
+            {
+                return NotFound();
+            }
+
+            var selectedIds = paper.PaperAuthorsBaoTgs.Select(x => x.AuthorIdBaoTg).ToList();
+            var model = new ManyToManyAssignmentViewModel
+            {
+                EntityId = paper.PaperIdBaoTg,
+                EntityName = paper.Title,
+                PageTitle = "Assign Authors",
+                OptionLabel = "Authors",
+                BackController = "Papers",
+                SelectedIds = selectedIds,
+                Options = await _context.AuthorsBaoTgs
+                    .OrderBy(x => x.FullName)
+                    .Select(x => new AssignmentOptionViewModel
+                    {
+                        Id = x.AuthorIdBaoTg,
+                        Name = x.FullName,
+                        Description = x.Affiliation,
+                        IsSelected = selectedIds.Contains(x.AuthorIdBaoTg)
+                    })
+                    .ToListAsync()
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AssignAuthors(int id, ManyToManyAssignmentViewModel model)
+        {
+            var paperExists = await _context.PapersBaoTgs.AnyAsync(x => x.PaperIdBaoTg == id);
+            if (!paperExists)
+            {
+                return NotFound();
+            }
+
+            var existingLinks = await _context.PaperAuthorsBaoTgs
+                .Where(x => x.PaperIdBaoTg == id)
+                .ToListAsync();
+
+            _context.PaperAuthorsBaoTgs.RemoveRange(existingLinks);
+
+            var selectedAuthorIds = model.SelectedIds
+                .Distinct()
+                .OrderBy(x => x)
+                .ToList();
+
+            var order = 1;
+            foreach (var authorId in selectedAuthorIds)
+            {
+                _context.PaperAuthorsBaoTgs.Add(new PaperAuthorsBaoTg
+                {
+                    PaperIdBaoTg = id,
+                    AuthorIdBaoTg = authorId,
+                    AuthorOrder = order++,
+                    IsCorrespondingAuthor = false
+                });
+            }
+
+            await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = "Authors assigned successfully. Author order was assigned automatically.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        public async Task<IActionResult> AssignKeywords(int id)
+        {
+            var paper = await _context.PapersBaoTgs
+                .Include(x => x.Keywords)
+                .FirstOrDefaultAsync(x => x.PaperIdBaoTg == id);
+
+            if (paper == null)
+            {
+                return NotFound();
+            }
+
+            var selectedIds = paper.Keywords.Select(x => x.KeywordIdLuanNtk).ToList();
+            var model = new ManyToManyAssignmentViewModel
+            {
+                EntityId = paper.PaperIdBaoTg,
+                EntityName = paper.Title,
+                PageTitle = "Assign Keywords",
+                OptionLabel = "Keywords",
+                BackController = "Papers",
+                SelectedIds = selectedIds,
+                Options = await _context.KeywordsLuanNtks
+                    .OrderBy(x => x.KeywordName)
+                    .Select(x => new AssignmentOptionViewModel
+                    {
+                        Id = x.KeywordIdLuanNtk,
+                        Name = x.KeywordName,
+                        Description = x.Description,
+                        IsSelected = selectedIds.Contains(x.KeywordIdLuanNtk)
+                    })
+                    .ToListAsync()
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AssignKeywords(int id, ManyToManyAssignmentViewModel model)
+        {
+            var paper = await _context.PapersBaoTgs
+                .AsTracking()
+                .Include(x => x.Keywords)
+                .FirstOrDefaultAsync(x => x.PaperIdBaoTg == id);
+
+            if (paper == null)
+            {
+                return NotFound();
+            }
+
+            var selectedKeywords = await _context.KeywordsLuanNtks
+                .AsTracking()
+                .Where(x => model.SelectedIds.Contains(x.KeywordIdLuanNtk))
+                .ToListAsync();
+
+            paper.Keywords.Clear();
+            foreach (var keyword in selectedKeywords)
+            {
+                paper.Keywords.Add(keyword);
+            }
+
+            paper.UpdatedAt = DateTime.Now;
+            await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = "Keywords assigned successfully.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        public async Task<IActionResult> Create()
+        {
+            return View(new PaperFormViewModel { JournalOptions = await BuildJournalOptionsAsync() });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(PaperFormViewModel model)
+        {
+            if (model.PublicationYear == null && model.PublicationDate.HasValue)
+            {
+                model.PublicationYear = model.PublicationDate.Value.Year;
+            }
+            if (!ModelState.IsValid)
+            {
+                model.JournalOptions = await BuildJournalOptionsAsync();
+                return View(model);
+            }
+
+            var paper = new PapersBaoTg
+            {
+                Title = model.Title.Trim(),
+                Abstract = Clean(model.Abstract),
+                Doi = Clean(model.Doi),
+                JournalIdMinhPv = model.JournalId,
+                PublicationDate = model.PublicationDate.HasValue ? DateOnly.FromDateTime(model.PublicationDate.Value) : null,
+                PublicationYear = model.PublicationYear,
+                Volume = Clean(model.Volume),
+                Issue = Clean(model.Issue),
+                Pages = Clean(model.Pages),
+                PaperUrl = Clean(model.PaperUrl),
+                PdfUrl = Clean(model.PdfUrl),
+                SourceName = Clean(model.SourceName),
+                IsOpenAccess = model.IsOpenAccess,
+                CreatedByHuyDd = GetCurrentUserId(),
+                CreatedAt = DateTime.Now
+            };
+
+            _context.PapersBaoTgs.Add(paper);
+            await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = "Paper created successfully.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        public async Task<IActionResult> Edit(int id)
+        {
+            var paper = await _context.PapersBaoTgs.FindAsync(id);
+            if (paper == null) return NotFound();
+
+            var model = new PaperFormViewModel
+            {
+                PaperId = paper.PaperIdBaoTg,
+                Title = paper.Title,
+                Abstract = paper.Abstract,
+                Doi = paper.Doi,
+                JournalId = paper.JournalIdMinhPv,
+                PublicationDate = paper.PublicationDate?.ToDateTime(TimeOnly.MinValue),
+                PublicationYear = paper.PublicationYear,
+                Volume = paper.Volume,
+                Issue = paper.Issue,
+                Pages = paper.Pages,
+                PaperUrl = paper.PaperUrl,
+                PdfUrl = paper.PdfUrl,
+                SourceName = paper.SourceName,
+                IsOpenAccess = paper.IsOpenAccess,
+                JournalOptions = await BuildJournalOptionsAsync()
+            };
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, PaperFormViewModel model)
+        {
+            if (model.PaperId != id) return BadRequest();
+            if (model.PublicationYear == null && model.PublicationDate.HasValue)
+            {
+                model.PublicationYear = model.PublicationDate.Value.Year;
+            }
+            if (!ModelState.IsValid)
+            {
+                model.JournalOptions = await BuildJournalOptionsAsync();
+                return View(model);
+            }
+
+            var paper = await _context.PapersBaoTgs.AsTracking().FirstOrDefaultAsync(x => x.PaperIdBaoTg == id);
+            if (paper == null) return NotFound();
+
+            paper.Title = model.Title.Trim();
+            paper.Abstract = Clean(model.Abstract);
+            paper.Doi = Clean(model.Doi);
+            paper.JournalIdMinhPv = model.JournalId;
+            paper.PublicationDate = model.PublicationDate.HasValue ? DateOnly.FromDateTime(model.PublicationDate.Value) : null;
+            paper.PublicationYear = model.PublicationYear;
+            paper.Volume = Clean(model.Volume);
+            paper.Issue = Clean(model.Issue);
+            paper.Pages = Clean(model.Pages);
+            paper.PaperUrl = Clean(model.PaperUrl);
+            paper.PdfUrl = Clean(model.PdfUrl);
+            paper.SourceName = Clean(model.SourceName);
+            paper.IsOpenAccess = model.IsOpenAccess;
+            paper.UpdatedAt = DateTime.Now;
+
+            await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = "Paper updated successfully.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        public async Task<IActionResult> Delete(int id)
+        {
+            var paper = await _context.PapersBaoTgs
+                .Include(x => x.JournalIdMinhPvNavigation)
+                .FirstOrDefaultAsync(x => x.PaperIdBaoTg == id);
+            return paper == null ? NotFound() : View(paper);
+        }
+
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            var paper = await _context.PapersBaoTgs.FindAsync(id);
+            if (paper == null) return NotFound();
+            try
+            {
+                _context.PapersBaoTgs.Remove(paper);
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Paper deleted successfully.";
+            }
+            catch (DbUpdateException)
+            {
+                TempData["ErrorMessage"] = "Cannot delete this paper because related records exist.";
+            }
+            return RedirectToAction(nameof(Index));
+        }
+
+        private async Task<List<SelectListItem>> BuildJournalOptionsAsync()
+        {
+            var items = await _context.JournalsMinhPvs
+                .OrderBy(x => x.JournalName)
+                .Select(x => new SelectListItem { Value = x.JournalIdMinhPv.ToString(), Text = x.JournalName })
+                .ToListAsync();
+            items.Insert(0, new SelectListItem { Value = "", Text = "-- No journal --" });
+            return items;
+        }
+
+        private int? GetCurrentUserId()
+        {
+            return int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId) ? userId : null;
+        }
+
+        private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    }
+}

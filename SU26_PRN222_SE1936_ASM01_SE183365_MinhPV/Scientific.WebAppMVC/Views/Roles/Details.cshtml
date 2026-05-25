@@ -1,0 +1,35 @@
+@model RolesHuyDd
+
+@{
+    ViewData["Title"] = "Role Details";
+}
+
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <h1 class="h3 mb-0">Role Details</h1>
+    <div>
+        <a asp-action="Edit" asp-route-id="@Model.RoleIdHuyDd" class="btn btn-primary">Edit</a>
+        <a asp-action="Index" class="btn btn-outline-secondary">Back</a>
+    </div>
+</div>
+
+<dl class="row">
+    <dt class="col-sm-3">Role name</dt>
+    <dd class="col-sm-9">@Model.RoleName</dd>
+    <dt class="col-sm-3">Description</dt>
+    <dd class="col-sm-9">@(Model.Description ?? "N/A")</dd>
+    <dt class="col-sm-3">Created</dt>
+    <dd class="col-sm-9">@Model.CreatedAt.ToString("yyyy-MM-dd HH:mm")</dd>
+    <dt class="col-sm-3">Assigned users</dt>
+    <dd class="col-sm-9">@Model.UserIdHuyDds.Count</dd>
+</dl>
+
+@if (Model.UserIdHuyDds.Any())
+{
+    <h2 class="h5">Users in this role</h2>
+    <ul>
+        @foreach (var user in Model.UserIdHuyDds.OrderBy(x => x.FullName))
+        {
+            <li>@user.FullName (@user.Email)</li>
+        }
+    </ul>
+}

@@ -1,0 +1,15 @@
+@model RoleFormViewModel
+
+@{
+    ViewData["Title"] = "Create Role";
+}
+
+<h1 class="h3 mb-3">Create Role</h1>
+
+<form asp-action="Create" method="post">
+    <partial name="_RoleForm" model="Model" />
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

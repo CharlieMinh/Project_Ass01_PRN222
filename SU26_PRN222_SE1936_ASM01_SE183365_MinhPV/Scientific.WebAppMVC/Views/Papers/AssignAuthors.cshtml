@@ -1,0 +1,13 @@
+@model ManyToManyAssignmentViewModel
+
+@{
+    ViewData["Title"] = "Assign Authors";
+}
+
+<div class="alert alert-info">
+    Author order is assigned automatically by author ID for this first version. Corresponding author is set to false by default.
+</div>
+
+<form asp-action="AssignAuthors" asp-route-id="@Model.EntityId" method="post">
+    <partial name="_AssignmentForm" model="Model" />
+</form>

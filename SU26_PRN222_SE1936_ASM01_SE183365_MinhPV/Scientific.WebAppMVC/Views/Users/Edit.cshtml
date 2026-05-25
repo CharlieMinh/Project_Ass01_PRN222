@@ -1,0 +1,15 @@
+@model UserAdminFormViewModel
+
+@{
+    ViewData["Title"] = "Edit User";
+}
+
+<h1 class="h3 mb-3">Edit User</h1>
+
+<form asp-action="Edit" asp-route-id="@Model.UserId" method="post">
+    <partial name="_UserForm" model="Model" />
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

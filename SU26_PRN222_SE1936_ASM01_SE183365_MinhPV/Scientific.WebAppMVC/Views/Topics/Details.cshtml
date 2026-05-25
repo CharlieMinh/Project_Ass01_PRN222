@@ -1,0 +1,4 @@
+@model TopicsLuanNtk
+@{ ViewData["Title"] = "Topic Details"; }
+<div class="d-flex justify-content-between mb-3"><h1 class="h3">Topic Details</h1><div><a asp-action="AssignKeywords" asp-route-id="@Model.TopicIdLuanNtk" class="btn btn-success">Assign Keywords</a> <a asp-action="Edit" asp-route-id="@Model.TopicIdLuanNtk" class="btn btn-primary">Edit</a> <a asp-action="Index" class="btn btn-outline-secondary">Back</a></div></div>
+<dl class="row"><dt class="col-sm-3">Name</dt><dd class="col-sm-9">@Model.TopicName</dd><dt class="col-sm-3">Description</dt><dd class="col-sm-9">@(Model.Description ?? "N/A")</dd><dt class="col-sm-3">Keywords</dt><dd class="col-sm-9">@string.Join(", ", Model.Keywords.Select(x => x.KeywordName))</dd></dl>

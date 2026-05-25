@@ -1,0 +1,4 @@
+@model KeywordsLuanNtk
+@{ ViewData["Title"] = "Edit Keyword"; }
+<h1 class="h3 mb-3">Edit Keyword</h1>
+<form asp-action="Edit" asp-route-id="@Model.KeywordIdLuanNtk" method="post"><partial name="_Form" model="Model" /></form>

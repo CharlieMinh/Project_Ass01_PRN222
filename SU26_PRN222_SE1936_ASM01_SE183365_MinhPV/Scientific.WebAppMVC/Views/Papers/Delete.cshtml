@@ -1,0 +1,5 @@
+@model PapersBaoTg
+@{ ViewData["Title"] = "Delete Paper"; }
+<h1 class="h3 text-danger">Delete Paper</h1>
+<p>Delete <strong>@Model.Title</strong>?</p>
+<form asp-action="Delete" asp-route-id="@Model.PaperIdBaoTg" method="post"><button class="btn btn-danger">Delete</button> <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a></form>

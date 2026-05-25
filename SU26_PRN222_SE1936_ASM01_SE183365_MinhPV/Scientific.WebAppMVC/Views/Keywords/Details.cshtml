@@ -1,0 +1,4 @@
+@model KeywordsLuanNtk
+@{ ViewData["Title"] = "Keyword Details"; }
+<div class="d-flex justify-content-between mb-3"><h1 class="h3">Keyword Details</h1><div><a asp-action="Edit" asp-route-id="@Model.KeywordIdLuanNtk" class="btn btn-primary">Edit</a> <a asp-action="Index" class="btn btn-outline-secondary">Back</a></div></div>
+<dl class="row"><dt class="col-sm-3">Name</dt><dd class="col-sm-9">@Model.KeywordName</dd><dt class="col-sm-3">Description</dt><dd class="col-sm-9">@(Model.Description ?? "N/A")</dd><dt class="col-sm-3">Papers</dt><dd class="col-sm-9">@Model.PaperIdBaoTgs.Count</dd><dt class="col-sm-3">Topics</dt><dd class="col-sm-9">@Model.Topics.Count</dd></dl>

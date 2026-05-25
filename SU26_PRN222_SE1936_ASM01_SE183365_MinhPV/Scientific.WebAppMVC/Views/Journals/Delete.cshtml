@@ -1,0 +1,6 @@
+@model JournalsMinhPv
+@{ ViewData["Title"] = "Delete Journal"; }
+<h1 class="h3 text-danger">Delete Journal</h1>
+@if (Model.PapersBaoTgs.Any()){<div class="alert alert-warning">This journal has @Model.PapersBaoTgs.Count paper(s). Delete may be blocked.</div>}
+<p>Delete <strong>@Model.JournalName</strong>?</p>
+<form asp-action="Delete" asp-route-id="@Model.JournalIdMinhPv" method="post"><button class="btn btn-danger">Delete</button> <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a></form>
