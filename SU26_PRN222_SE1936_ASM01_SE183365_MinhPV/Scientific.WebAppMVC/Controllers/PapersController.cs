@@ -145,11 +145,19 @@ namespace Scientific.WebAppMVC.Controllers
 
             var currentUserId = GetCurrentUserId();
             var isBookmarked = false;
+            var isJournalFollowed = false;
             if (currentUserId.HasValue)
             {
                 isBookmarked = await _context.Bookmarks
                     .AsNoTracking()
                     .AnyAsync(x => x.PaperIdBaoTg == id && x.UserIdHuyDd == currentUserId.Value);
+
+                if (paper.JournalIdMinhPv.HasValue)
+                {
+                    isJournalFollowed = await _context.UserFollowJournals
+                        .AsNoTracking()
+                        .AnyAsync(x => x.JournalIdMinhPv == paper.JournalIdMinhPv.Value && x.UserIdHuyDd == currentUserId.Value);
+                }
             }
 
             var model = new PaperDetailViewModel
@@ -158,6 +166,7 @@ namespace Scientific.WebAppMVC.Controllers
                 Title = paper.Title,
                 Abstract = paper.Abstract,
                 DOI = paper.Doi,
+                JournalId = paper.JournalIdMinhPv,
                 JournalName = paper.JournalIdMinhPvNavigation?.JournalName,
                 PublisherName = paper.JournalIdMinhPvNavigation?.Publisher?.PublisherName,
                 PublicationYear = paper.PublicationYear,
@@ -175,7 +184,8 @@ namespace Scientific.WebAppMVC.Controllers
                 ViewCount = metric.ViewCount,
                 DownloadCount = metric.DownloadCount,
                 BookmarkCount = metric.BookmarkCount,
-                IsBookmarkedByCurrentUser = isBookmarked
+                IsBookmarkedByCurrentUser = isBookmarked,
+                IsJournalFollowedByCurrentUser = isJournalFollowed
             };
 
             return View(model);
@@ -312,6 +322,11 @@ namespace Scientific.WebAppMVC.Controllers
                 .Where(x => model.SelectedIds.Contains(x.KeywordIdLuanNtk))
                 .ToListAsync();
 
+            var previousKeywordIds = paper.Keywords.Select(x => x.KeywordIdLuanNtk).ToHashSet();
+            var newlyAssignedKeywords = selectedKeywords
+                .Where(x => !previousKeywordIds.Contains(x.KeywordIdLuanNtk))
+                .ToList();
+
             paper.Keywords.Clear();
             foreach (var keyword in selectedKeywords)
             {
@@ -319,6 +334,7 @@ namespace Scientific.WebAppMVC.Controllers
             }
 
             paper.UpdatedAt = DateTime.Now;
+            await QueueKeywordFollowerNotificationsAsync(paper, newlyAssignedKeywords);
             await _context.SaveChangesAsync();
             TempData["SuccessMessage"] = "Keywords assigned successfully.";
             return RedirectToAction(nameof(Details), new { id });
@@ -366,6 +382,10 @@ namespace Scientific.WebAppMVC.Controllers
 
             _context.PapersBaoTgs.Add(paper);
             await _context.SaveChangesAsync();
+            if (await QueueJournalFollowerNotificationsAsync(paper))
+            {
+                await _context.SaveChangesAsync();
+            }
             TempData["SuccessMessage"] = "Paper created successfully.";
             return RedirectToAction(nameof(Index));
         }
@@ -495,6 +515,76 @@ namespace Scientific.WebAppMVC.Controllers
         private int? GetCurrentUserId()
         {
             return int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId) ? userId : null;
+        }
+
+        private async Task<bool> QueueJournalFollowerNotificationsAsync(PapersBaoTg paper)
+        {
+            if (!paper.JournalIdMinhPv.HasValue)
+            {
+                return false;
+            }
+
+            var followerIds = await _context.UserFollowJournals
+                .AsNoTracking()
+                .Where(x => x.JournalIdMinhPv == paper.JournalIdMinhPv.Value)
+                .Select(x => x.UserIdHuyDd)
+                .Distinct()
+                .ToListAsync();
+
+            if (!followerIds.Any())
+            {
+                return false;
+            }
+
+            var journalName = await _context.JournalsMinhPvs
+                .AsNoTracking()
+                .Where(x => x.JournalIdMinhPv == paper.JournalIdMinhPv.Value)
+                .Select(x => x.JournalName)
+                .FirstOrDefaultAsync();
+
+            foreach (var userId in followerIds)
+            {
+                _context.Notifications.Add(new Notification
+                {
+                    UserIdHuyDd = userId,
+                    Title = "New paper in followed journal",
+                    Message = $"New paper published in {journalName ?? "your followed journal"}: {paper.Title}",
+                    NotificationType = "Journal",
+                    RelatedPaperIdBaoTg = paper.PaperIdBaoTg,
+                    IsRead = false,
+                    CreatedAt = DateTime.Now
+                });
+            }
+
+            return true;
+        }
+
+        private async Task QueueKeywordFollowerNotificationsAsync(PapersBaoTg paper, List<KeywordsLuanNtk> keywords)
+        {
+            foreach (var keyword in keywords)
+            {
+                var followerIds = await _context.UserFollowKeywords
+                    .AsNoTracking()
+                    .Where(x => x.KeywordId == keyword.KeywordIdLuanNtk)
+                    .Select(x => x.UserIdHuyDd)
+                    .Distinct()
+                    .ToListAsync();
+
+                foreach (var userId in followerIds)
+                {
+                    _context.Notifications.Add(new Notification
+                    {
+                        UserIdHuyDd = userId,
+                        Title = "New paper for followed keyword",
+                        Message = $"New paper published for your followed keyword {keyword.KeywordName}: {paper.Title}",
+                        NotificationType = "Keyword",
+                        RelatedPaperIdBaoTg = paper.PaperIdBaoTg,
+                        RelatedKeywordId = keyword.KeywordIdLuanNtk,
+                        IsRead = false,
+                        CreatedAt = DateTime.Now
+                    });
+                }
+            }
         }
 
         private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();

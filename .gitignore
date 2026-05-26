@@ -8,6 +8,7 @@
 ## Build output
 bin/
 obj/
+node_modules/
 [Dd]ebug/
 [Rr]elease/
 x64/
@@ -16,6 +17,8 @@ x86/
 
 ## .NET
 TestResults/
+test-results/
+e2e-tests/
 *.trx
 *.coverage
 *.coveragexml

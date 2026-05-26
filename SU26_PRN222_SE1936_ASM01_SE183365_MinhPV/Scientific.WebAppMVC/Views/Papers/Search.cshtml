@@ -6,6 +6,7 @@
         || !string.IsNullOrWhiteSpace(Model.AuthorName)
         || Model.JournalId.HasValue
         || Model.PublicationYear.HasValue;
+    var returnUrl = Context.Request.Path + Context.Request.QueryString;
 }
 
 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -40,6 +41,15 @@
         </div>
     </div>
 </form>
+
+@if (TempData["SuccessMessage"] is string successMessage)
+{
+    <div class="alert alert-success">@successMessage</div>
+}
+@if (TempData["ErrorMessage"] is string errorMessage)
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
 
 @if (hasFilter && !Model.Results.Any())
 {
@@ -79,7 +89,10 @@
                         <a asp-action="Details" asp-route-id="@paper.PaperId" class="btn btn-sm btn-outline-primary">View Detail</a>
                         @if (User.Identity?.IsAuthenticated == true)
                         {
-                            <button type="button" class="btn btn-sm btn-outline-secondary" disabled>Bookmark</button>
+                            <form asp-controller="Bookmarks" asp-action="Add" asp-route-paperId="@paper.PaperId" method="post" class="d-inline">
+                                <input type="hidden" name="returnUrl" value="@returnUrl" />
+                                <button type="submit" class="btn btn-sm btn-outline-secondary">Bookmark</button>
+                            </form>
                         }
                     </div>
                 </div>
