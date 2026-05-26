@@ -1,0 +1,101 @@
+@model TrendDetailViewModel
+
+<section class="mb-4">
+    <div class="row g-3">
+        <div class="col-md-4">
+            <div class="border rounded p-3 h-100">
+                <div class="text-muted small">Total Papers</div>
+                <div class="fs-3 fw-semibold">@Model.TotalPaperCount</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="border rounded p-3 h-100">
+                <div class="text-muted small">Total Citations</div>
+                <div class="fs-3 fw-semibold">@Model.TotalCitationCount</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="border rounded p-3 h-100">
+                <div class="text-muted small">Average Trend Score</div>
+                <div class="fs-3 fw-semibold">@Model.AverageTrendScore.ToString("0.##")</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="mb-4">
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="border rounded p-3 h-100">
+                <h2 class="h5 mb-3">Paper Count Over Time</h2>
+                @if (Model.TrendLabels.Any())
+                {
+                    <canvas id="trendDetailPaperChart" height="130"></canvas>
+                }
+                else
+                {
+                    <div class="alert alert-info mb-0">No paper trend records available.</div>
+                }
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="border rounded p-3 h-100">
+                <h2 class="h5 mb-3">Trend Score Over Time</h2>
+                @if (Model.TrendLabels.Any())
+                {
+                    <canvas id="trendDetailScoreChart" height="180"></canvas>
+                }
+                else
+                {
+                    <div class="alert alert-info mb-0">No trend score records available.</div>
+                }
+            </div>
+        </div>
+    </div>
+</section>
+
+<script src="~/lib/chart.js/chart.umd.min.js"></script>
+<script>
+    const detailLabels = @Html.Raw(Json.Serialize(Model.TrendLabels));
+    const detailPaperCounts = @Html.Raw(Json.Serialize(Model.PaperCounts));
+    const detailTrendScores = @Html.Raw(Json.Serialize(Model.TrendScores));
+
+    if (document.getElementById('trendDetailPaperChart')) {
+        new Chart(document.getElementById('trendDetailPaperChart'), {
+            type: 'line',
+            data: {
+                labels: detailLabels,
+                datasets: [{
+                    label: 'Paper Count',
+                    data: detailPaperCounts,
+                    borderColor: '#2563eb',
+                    backgroundColor: 'rgba(37, 99, 235, 0.14)',
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+    }
+
+    if (document.getElementById('trendDetailScoreChart')) {
+        new Chart(document.getElementById('trendDetailScoreChart'), {
+            type: 'bar',
+            data: {
+                labels: detailLabels,
+                datasets: [{
+                    label: 'Trend Score',
+                    data: detailTrendScores,
+                    backgroundColor: '#0f766e'
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+    }
+</script>

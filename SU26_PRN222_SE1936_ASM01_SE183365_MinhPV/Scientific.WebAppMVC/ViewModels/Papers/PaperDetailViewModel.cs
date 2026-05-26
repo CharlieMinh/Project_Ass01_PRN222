@@ -6,6 +6,7 @@ namespace Scientific.WebAppMVC.ViewModels.Papers
         public string Title { get; set; } = string.Empty;
         public string? Abstract { get; set; }
         public string? DOI { get; set; }
+        public int? JournalId { get; set; }
         public string? JournalName { get; set; }
         public string? PublisherName { get; set; }
         public int? PublicationYear { get; set; }
@@ -27,5 +28,6 @@ namespace Scientific.WebAppMVC.ViewModels.Papers
         public int BookmarkCount { get; set; }
 
         public bool IsBookmarkedByCurrentUser { get; set; }
+        public bool IsJournalFollowedByCurrentUser { get; set; }
     }
 }

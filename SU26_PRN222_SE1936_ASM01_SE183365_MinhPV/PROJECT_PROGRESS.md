@@ -2,11 +2,11 @@
 
 Project: Scientific Journal Publication Trend Tracking System  
 Technology: ASP.NET Core MVC, SQL Server, Entity Framework Core  
-Last updated: 2026-05-25
+Last updated: 2026-05-26
 
 ## Current Status
 
-The project has completed the foundation setup, authentication milestone, Admin/User authorization foundation, all Step 8 core CRUD modules, and Step 9 many-to-many relationship management. The application can run locally, connect to SQL Server, register users, log in, log out, display role-based navigation, let Admin/Researcher manage core academic data, and assign the key relationships needed for search/detail/dashboard data depth.
+The project has completed the foundation setup, authentication milestone, Admin/User authorization foundation, all Step 8 core CRUD modules, Step 9 many-to-many relationship management, Step 10 paper search/detail, Step 12 dashboard/charts, and Step 13 bookmark/follow/notification personalization. The application can run locally, connect to SQL Server, register users, log in, log out, display role-based navigation, let Admin/Researcher manage core academic data, assign the key academic relationships, search/view paper details, show trend dashboards, bookmark papers, follow keywords/topics/journals, and view notifications.
 
 Local URL:
 
@@ -68,6 +68,7 @@ Implemented:
   - Trend Dashboard
   - Trending Topics
   - My Bookmarks
+  - My Following
   - Notifications
 - Added authentication menu:
   - Login
@@ -701,3 +702,195 @@ Completed:
 Verification:
 - `git push -u origin main` completed successfully.
 - Remote tracking is set: local `main` tracks `origin/main`.
+
+## Milestone Notes
+
+### Step 11: Seed Data
+
+Status: Skipped by project decision.
+
+Reason:
+- Seed/sample data was already inserted manually into the database tables.
+- The project moved directly to Step 12.
+
+### Step 12: Dashboard + Chart.js
+
+Status: Completed locally and ready to be tracked through the `developer` branch.
+
+Completed:
+- Added `DashboardController` with `/Dashboard/Index`.
+- Added `TrendsController` with:
+  - `/Trends/Keyword/{id}`
+  - `/Trends/Topic/{id}`
+  - `/Trends/TrendingTopics`
+- Added dashboard view models for statistic cards, trend charts, top papers, trend detail, and trending item rankings.
+- Added statistic cards:
+  - Total Papers
+  - Total Authors
+  - Total Journals
+  - Total Keywords
+  - Total Topics
+- Added line chart for publication trend over time by keyword.
+- Added filter controls for keyword, from year, and to year.
+- Added bar charts for top trending keywords and top trending topics using latest trend year.
+- Added top papers ranking table with title, journal, publication year, citation count, and bookmark count.
+- Added trend detail pages for keyword/topic with paper count and trend score charts.
+- Added local Chart.js vendor file under `wwwroot/lib/chart.js` so dashboard charts do not depend on CDN availability during demo.
+
+Files changed:
+- `Scientific.WebAppMVC/Controllers/DashboardController.cs`
+- `Scientific.WebAppMVC/Controllers/TrendsController.cs`
+- `Scientific.WebAppMVC/ViewModels/Dashboard/TrendDashboardViewModel.cs`
+- `Scientific.WebAppMVC/ViewModels/Dashboard/TopPaperViewModel.cs`
+- `Scientific.WebAppMVC/ViewModels/Dashboard/TrendDetailViewModel.cs`
+- `Scientific.WebAppMVC/ViewModels/Dashboard/TrendingItemViewModel.cs`
+- `Scientific.WebAppMVC/Views/Dashboard/Index.cshtml`
+- `Scientific.WebAppMVC/Views/Trends/Keyword.cshtml`
+- `Scientific.WebAppMVC/Views/Trends/Topic.cshtml`
+- `Scientific.WebAppMVC/Views/Trends/TrendingTopics.cshtml`
+- `Scientific.WebAppMVC/Views/Trends/_TrendDetail.cshtml`
+- `Scientific.WebAppMVC/Views/_ViewImports.cshtml`
+- `Scientific.WebAppMVC/wwwroot/lib/chart.js/chart.umd.min.js`
+- `Scientific.WebAppMVC/wwwroot/lib/chart.js/LICENSE.md`
+
+Verification:
+- `dotnet build Scientific.WebAppMVC/Scientific.WebAppMVC.csproj` succeeded with 0 warnings and 0 errors after stopping the running app process that locked the executable.
+- `/Dashboard/Index` returns 200.
+- `/Dashboard/Index?keywordId=1&fromYear=2020&toYear=2024` returns 200.
+- `/Trends/TrendingTopics` returns 200.
+- `/Trends/Keyword/1` returns 200.
+- `/Trends/Topic/1` returns 200.
+- `/lib/chart.js/chart.umd.min.js` returns 200.
+- Browser DOM check confirmed dashboard headings, statistic card labels, three chart canvases, top papers section, and trending topics table rows render.
+
+Known notes:
+- Dashboard uses existing `TrendRecords` data. No migration or schema change was created.
+- Default dashboard keyword falls back to an AI-related keyword if available, otherwise to the highest latest trend score keyword.
+- The latest trend year in the current database is used for top keyword/topic rankings.
+- Changes are managed through the `developer` branch instead of pushing directly to `main`.
+
+### Step 13: Bookmark / Follow / Notification
+
+Status: Completed locally and ready to be tracked through the `developer` branch.
+
+Completed:
+- Added `BookmarksController`:
+  - `GET /Bookmarks/Index`
+  - `POST /Bookmarks/Add/{paperId}`
+  - `POST /Bookmarks/Remove/{paperId}`
+- Added bookmark list page for logged-in users.
+- Connected paper search result cards to real bookmark POST actions.
+- Connected paper detail bookmark button to add/remove actions.
+- Bookmark add checks login, paper existence, and duplicate bookmarks before insert.
+- Bookmark remove updates the related paper metric safely.
+- `PaperMetrics.BookmarkCount` is incremented/decremented when bookmarking changes.
+- Added `FollowingController`:
+  - Follow/unfollow keyword.
+  - Follow/unfollow topic.
+  - Follow/unfollow journal.
+  - `GET /Following/Index` for My Following.
+- Added follow/unfollow controls:
+  - Keyword trend detail page.
+  - Topic trend detail page.
+  - Paper detail journal section.
+- Added `NotificationsController`:
+  - `GET /Notifications/Index`
+  - `POST /Notifications/MarkAsRead/{id}`
+  - `POST /Notifications/MarkAllAsRead`
+- Added notification list page with unread state and related paper/trend links.
+- Added basic notification generation:
+  - When a paper is created, users following that paper's journal receive a notification.
+  - When new keywords are assigned to a paper, users following those keywords receive notifications.
+- Added My Following link to the authenticated user menu.
+
+Files changed:
+- `Scientific.WebAppMVC/Controllers/BookmarksController.cs`
+- `Scientific.WebAppMVC/Controllers/FollowingController.cs`
+- `Scientific.WebAppMVC/Controllers/NotificationsController.cs`
+- `Scientific.WebAppMVC/Controllers/PapersController.cs`
+- `Scientific.WebAppMVC/Controllers/TrendsController.cs`
+- `Scientific.WebAppMVC/ViewModels/Bookmarks/*`
+- `Scientific.WebAppMVC/ViewModels/Following/*`
+- `Scientific.WebAppMVC/ViewModels/Notifications/*`
+- `Scientific.WebAppMVC/ViewModels/Papers/PaperDetailViewModel.cs`
+- `Scientific.WebAppMVC/ViewModels/Dashboard/TrendDetailViewModel.cs`
+- `Scientific.WebAppMVC/Views/Bookmarks/Index.cshtml`
+- `Scientific.WebAppMVC/Views/Following/Index.cshtml`
+- `Scientific.WebAppMVC/Views/Notifications/Index.cshtml`
+- `Scientific.WebAppMVC/Views/Papers/Search.cshtml`
+- `Scientific.WebAppMVC/Views/Papers/Details.cshtml`
+- `Scientific.WebAppMVC/Views/Trends/Keyword.cshtml`
+- `Scientific.WebAppMVC/Views/Trends/Topic.cshtml`
+- `Scientific.WebAppMVC/Views/Shared/_Layout.cshtml`
+- `Scientific.WebAppMVC/Views/_ViewImports.cshtml`
+
+Verification:
+- `dotnet build Scientific.WebAppMVC/Scientific.WebAppMVC.csproj` succeeded with 0 warnings and 0 errors.
+- `GET /Papers/Search` returns 200.
+- `GET /Trends/TrendingTopics` returns 200.
+- `GET /Bookmarks/Index` redirects unauthenticated users to `/Account/Login`.
+- `GET /Following/Index` redirects unauthenticated users to `/Account/Login`.
+- `GET /Notifications/Index` redirects unauthenticated users to `/Account/Login`.
+- In-app browser check confirmed `/Papers/Search` renders and protected bookmark routes redirect to login.
+
+Known notes:
+- Notification generation is intentionally simple and non-realtime for the first demo version.
+- Topic trending notification generation is not wired yet because there is no manual TrendRecords update workflow in the current app.
+- Changes are managed through the `developer` branch instead of pushing directly to `main`.
+
+### 2026-05-26: Playwright E2E Test For Steps 1-13
+
+Status: Completed locally. The `e2e-tests/` folder is intentionally ignored and kept only on the local machine.
+
+Completed:
+- Added Playwright e2e script:
+  - `e2e-tests/prn222-step13-e2e.js`
+- Added local Playwright package files in `e2e-tests` for running the script from terminal.
+- Added `.gitignore` rules for:
+  - `node_modules/`
+  - `test-results/`
+  - `e2e-tests/`
+- The script verifies 13 end-to-end steps:
+  1. Home page loads.
+  2. Register unique user.
+  3. Profile shows registered user and role.
+  4. Normal user is denied DataManager CRUD.
+  5. Logout.
+  6. Admin login and CRUD access.
+  7. Admin creates a paper with journal.
+  8. Admin assigns keyword to paper.
+  9. Dashboard and trending topics render.
+  10. User searches the created paper.
+  11. Paper detail loads and bookmark works.
+  12. My Bookmarks and My Following work.
+  13. Notification is generated for followed journal and marked read.
+- Each step takes a screenshot under `test-results/prn222-e2e-*`.
+- The script prints a terminal summary with PASSED/FAILED per step.
+
+Bug found and fixed:
+- Initial e2e run showed notification `Mark All as Read` / `Mark Read` returned success but left `IsRead = false`.
+- Fixed `NotificationsController` to use EF Core `ExecuteUpdateAsync` for direct SQL updates on notification read state.
+
+Verification:
+
+```text
+dotnet build Scientific.WebAppMVC/Scientific.WebAppMVC.csproj
+Build succeeded.
+0 Warning(s)
+0 Error(s)
+
+node ./e2e-tests/prn222-step13-e2e.js
+Step 01 PASSED
+Step 02 PASSED
+Step 03 PASSED
+Step 04 PASSED
+Step 05 PASSED
+Step 06 PASSED
+Step 07 PASSED
+Step 08 PASSED
+Step 09 PASSED
+Step 10 PASSED
+Step 11 PASSED
+Step 12 PASSED
+Step 13 PASSED
+```

@@ -1,0 +1,251 @@
+@model TrendDashboardViewModel
+
+@{
+    ViewData["Title"] = "Trend Dashboard";
+}
+
+<div class="d-flex justify-content-between align-items-start gap-3 mb-4">
+    <div>
+        <h1 class="h3 mb-1">Trend Dashboard</h1>
+        <p class="text-muted mb-0">Publication trends, topic momentum, and high-impact papers.</p>
+    </div>
+    <a asp-controller="Trends" asp-action="TrendingTopics" class="btn btn-outline-primary">Trending Topics</a>
+</div>
+
+<section class="mb-4">
+    <div class="row g-3">
+        <div class="col-sm-6 col-lg">
+            <div class="border rounded p-3 h-100">
+                <div class="text-muted small">Total Papers</div>
+                <div class="fs-3 fw-semibold">@Model.TotalPapers</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg">
+            <div class="border rounded p-3 h-100">
+                <div class="text-muted small">Total Authors</div>
+                <div class="fs-3 fw-semibold">@Model.TotalAuthors</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg">
+            <div class="border rounded p-3 h-100">
+                <div class="text-muted small">Total Journals</div>
+                <div class="fs-3 fw-semibold">@Model.TotalJournals</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg">
+            <div class="border rounded p-3 h-100">
+                <div class="text-muted small">Total Keywords</div>
+                <div class="fs-3 fw-semibold">@Model.TotalKeywords</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg">
+            <div class="border rounded p-3 h-100">
+                <div class="text-muted small">Total Topics</div>
+                <div class="fs-3 fw-semibold">@Model.TotalTopics</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="mb-4">
+    <form asp-action="Index" method="get" class="border rounded p-3 bg-light">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-5">
+                <label asp-for="SelectedKeywordId" class="form-label">Keyword</label>
+                <select name="keywordId" class="form-select" asp-items="Model.KeywordOptions">
+                    <option value="">-- Select keyword --</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label asp-for="FromYear" class="form-label">From Year</label>
+                <input name="fromYear" value="@Model.FromYear" type="number" class="form-control" placeholder="2020" />
+            </div>
+            <div class="col-md-2">
+                <label asp-for="ToYear" class="form-label">To Year</label>
+                <input name="toYear" value="@Model.ToYear" type="number" class="form-control" placeholder="2024" />
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary">Apply</button>
+            </div>
+            <div class="col-auto">
+                <a asp-action="Index" class="btn btn-outline-secondary">Reset</a>
+            </div>
+        </div>
+    </form>
+</section>
+
+<section class="mb-4">
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="border rounded p-3 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h5 mb-0">Publication Trend Over Time</h2>
+                    <span class="text-muted small">@(Model.SelectedKeywordName ?? "No keyword")</span>
+                </div>
+                @if (Model.TrendLabels.Any())
+                {
+                    <canvas id="trendChart" height="130"></canvas>
+                }
+                else
+                {
+                    <div class="alert alert-info mb-0">No trend data available for the selected filter.</div>
+                }
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="border rounded p-3 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h5 mb-0">Top Trending Keywords</h2>
+                    <span class="text-muted small">Year @(Model.LatestTrendYear?.ToString() ?? "N/A")</span>
+                </div>
+                @if (Model.TopKeywordLabels.Any())
+                {
+                    <canvas id="keywordChart" height="180"></canvas>
+                }
+                else
+                {
+                    <div class="alert alert-info mb-0">No keyword trend data available.</div>
+                }
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="mb-4">
+    <div class="row g-4">
+        <div class="col-lg-5">
+            <div class="border rounded p-3 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h5 mb-0">Top Trending Topics</h2>
+                    <span class="text-muted small">Year @(Model.LatestTrendYear?.ToString() ?? "N/A")</span>
+                </div>
+                @if (Model.TopTopicLabels.Any())
+                {
+                    <canvas id="topicChart" height="180"></canvas>
+                }
+                else
+                {
+                    <div class="alert alert-info mb-0">No topic trend data available.</div>
+                }
+            </div>
+        </div>
+        <div class="col-lg-7">
+            <div class="border rounded p-3 h-100">
+                <h2 class="h5 mb-3">Top Papers</h2>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Paper</th>
+                                <th>Journal</th>
+                                <th>Year</th>
+                                <th class="text-end">Citations</th>
+                                <th class="text-end">Bookmarks</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var paper in Model.TopPapers)
+                            {
+                                <tr>
+                                    <td>
+                                        <a asp-controller="Papers" asp-action="Details" asp-route-id="@paper.PaperId" class="text-decoration-none">
+                                            @paper.Title
+                                        </a>
+                                    </td>
+                                    <td>@(paper.JournalName ?? "N/A")</td>
+                                    <td>@(paper.PublicationYear?.ToString() ?? "N/A")</td>
+                                    <td class="text-end">@paper.CitationCount</td>
+                                    <td class="text-end">@paper.BookmarkCount</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="mb-4">
+    <div class="border rounded p-3">
+        <h2 class="h5">Trend Formula</h2>
+        <p class="mb-0 text-muted">
+            TrendScore = PaperCount + GrowthRate + CitationCount * 0.01.
+            This keeps the demo easy to explain while still combining publication volume, growth, and citation impact.
+        </p>
+    </div>
+</section>
+
+@section Scripts {
+    <script src="~/lib/chart.js/chart.umd.min.js"></script>
+    <script>
+        const trendLabels = @Html.Raw(Json.Serialize(Model.TrendLabels));
+        const trendData = @Html.Raw(Json.Serialize(Model.TrendPaperCounts));
+        const keywordLabels = @Html.Raw(Json.Serialize(Model.TopKeywordLabels));
+        const keywordScores = @Html.Raw(Json.Serialize(Model.TopKeywordScores));
+        const topicLabels = @Html.Raw(Json.Serialize(Model.TopTopicLabels));
+        const topicScores = @Html.Raw(Json.Serialize(Model.TopTopicScores));
+
+        if (document.getElementById('trendChart')) {
+            new Chart(document.getElementById('trendChart'), {
+                type: 'line',
+                data: {
+                    labels: trendLabels,
+                    datasets: [{
+                        label: 'Publication Count',
+                        data: trendData,
+                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(37, 99, 235, 0.14)',
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: true } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+
+        if (document.getElementById('keywordChart')) {
+            new Chart(document.getElementById('keywordChart'), {
+                type: 'bar',
+                data: {
+                    labels: keywordLabels,
+                    datasets: [{
+                        label: 'Trend Score',
+                        data: keywordScores,
+                        backgroundColor: '#0f766e'
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: { x: { beginAtZero: true } }
+                }
+            });
+        }
+
+        if (document.getElementById('topicChart')) {
+            new Chart(document.getElementById('topicChart'), {
+                type: 'bar',
+                data: {
+                    labels: topicLabels,
+                    datasets: [{
+                        label: 'Trend Score',
+                        data: topicScores,
+                        backgroundColor: '#7c3aed'
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: { x: { beginAtZero: true } }
+                }
+            });
+        }
+    </script>
+}

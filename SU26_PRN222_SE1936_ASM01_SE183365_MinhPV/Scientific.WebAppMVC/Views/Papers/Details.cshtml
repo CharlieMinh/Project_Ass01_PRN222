@@ -3,6 +3,7 @@
 @{
     ViewData["Title"] = "Paper Details";
     var canManagePaper = User.IsInRole(AppRoles.Admin) || User.IsInRole(AppRoles.Researcher);
+    var returnUrl = Context.Request.Path + Context.Request.QueryString;
 }
 
 <div class="d-flex justify-content-between align-items-start gap-3 mb-4">
@@ -33,11 +34,41 @@
     </div>
 </div>
 
+@if (TempData["SuccessMessage"] is string successMessage)
+{
+    <div class="alert alert-success">@successMessage</div>
+}
+@if (TempData["ErrorMessage"] is string errorMessage)
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+
 <section class="mb-4">
     <h2 class="h5">Meta Info</h2>
     <dl class="row border rounded p-3 mb-0">
         <dt class="col-sm-3">Journal</dt>
-        <dd class="col-sm-9">@(Model.JournalName ?? "N/A")</dd>
+        <dd class="col-sm-9">
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <span>@(Model.JournalName ?? "N/A")</span>
+                @if (User.Identity?.IsAuthenticated == true && Model.JournalId.HasValue)
+                {
+                    if (Model.IsJournalFollowedByCurrentUser)
+                    {
+                        <form asp-controller="Following" asp-action="UnfollowJournal" asp-route-journalId="@Model.JournalId" method="post" class="d-inline">
+                            <input type="hidden" name="returnUrl" value="@returnUrl" />
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Unfollow Journal</button>
+                        </form>
+                    }
+                    else
+                    {
+                        <form asp-controller="Following" asp-action="FollowJournal" asp-route-journalId="@Model.JournalId" method="post" class="d-inline">
+                            <input type="hidden" name="returnUrl" value="@returnUrl" />
+                            <button type="submit" class="btn btn-sm btn-outline-secondary">Follow Journal</button>
+                        </form>
+                    }
+                }
+            </div>
+        </dd>
 
         <dt class="col-sm-3">Publisher</dt>
         <dd class="col-sm-9">@(Model.PublisherName ?? "N/A")</dd>
@@ -141,9 +172,20 @@
         }
         @if (User.Identity?.IsAuthenticated == true)
         {
-            <button type="button" class="btn btn-outline-secondary" disabled>
-                @(Model.IsBookmarkedByCurrentUser ? "Bookmarked" : "Bookmark")
-            </button>
+            if (Model.IsBookmarkedByCurrentUser)
+            {
+                <form asp-controller="Bookmarks" asp-action="Remove" asp-route-paperId="@Model.PaperId" method="post" class="d-inline">
+                    <input type="hidden" name="returnUrl" value="@returnUrl" />
+                    <button type="submit" class="btn btn-outline-danger">Remove Bookmark</button>
+                </form>
+            }
+            else
+            {
+                <form asp-controller="Bookmarks" asp-action="Add" asp-route-paperId="@Model.PaperId" method="post" class="d-inline">
+                    <input type="hidden" name="returnUrl" value="@returnUrl" />
+                    <button type="submit" class="btn btn-outline-secondary">Bookmark</button>
+                </form>
+            }
         }
     </div>
 </section>

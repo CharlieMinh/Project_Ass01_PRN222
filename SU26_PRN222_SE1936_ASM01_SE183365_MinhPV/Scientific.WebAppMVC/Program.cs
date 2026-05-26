@@ -22,17 +22,13 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.SlidingExpiration = true;
     });
 
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy(AppPolicies.AdminOnly, policy =>
-        policy.RequireRole(AppRoles.Admin));
-
-    options.AddPolicy(AppPolicies.AcademicUser, policy =>
-        policy.RequireRole(AppRoles.Admin, AppRoles.Researcher, AppRoles.Lecturer, AppRoles.Student, AppRoles.LecturerStudent));
-
-    options.AddPolicy(AppPolicies.DataManager, policy =>
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy(AppPolicies.AdminOnly, policy =>
+        policy.RequireRole(AppRoles.Admin))
+    .AddPolicy(AppPolicies.AcademicUser, policy =>
+        policy.RequireRole(AppRoles.Admin, AppRoles.Researcher, AppRoles.Lecturer, AppRoles.Student, AppRoles.LecturerStudent))
+    .AddPolicy(AppPolicies.DataManager, policy =>
         policy.RequireRole(AppRoles.Admin, AppRoles.Researcher));
-});
 
 builder.Services.AddScoped<IJournalsMinhPvService, JournalsMinhPvService>();
 builder.Services.AddScoped<IUsersHuyDdSevice, UsersHuyDdSevice>();
