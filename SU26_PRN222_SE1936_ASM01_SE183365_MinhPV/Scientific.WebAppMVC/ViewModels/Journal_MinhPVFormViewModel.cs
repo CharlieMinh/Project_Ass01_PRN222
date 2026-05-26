@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Scientific.WebAppMVC.ViewModels
 {
-    public class JournalFormViewModel
+    public class Journal_MinhPVFormViewModel
     {
         public int? JournalId { get; set; }
 

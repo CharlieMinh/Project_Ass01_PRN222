@@ -13,11 +13,11 @@ using Scientific.WebAppMVC.Authorization;
 namespace Scientific.WebAppMVC.Controllers
 {
     [Authorize(Policy = AppPolicies.AdminOnly)]
-    public class JournalsMinhPvsController : Controller
+    public class Journals_MinhPVLegacyController : Controller
     {
         // private readonly ScientificJournalTrendDBContext _context;
         private readonly IJournalsMinhPvService _journalsMinhPvService;
-        public JournalsMinhPvsController(IJournalsMinhPvService journalsMinhPvService)
+        public Journals_MinhPVLegacyController(IJournalsMinhPvService journalsMinhPvService)
         {
             _journalsMinhPvService = journalsMinhPvService;
         }

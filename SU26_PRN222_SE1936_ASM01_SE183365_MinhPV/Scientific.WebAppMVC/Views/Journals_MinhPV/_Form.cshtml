@@ -1,4 +1,4 @@
-@model JournalFormViewModel
+@model Journal_MinhPVFormViewModel
 <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 <input asp-for="JournalId" type="hidden" />
 <div class="row"><div class="col-md-8 mb-3"><label asp-for="JournalName" class="form-label"></label><input asp-for="JournalName" class="form-control" /><span asp-validation-for="JournalName" class="text-danger"></span></div><div class="col-md-4 mb-3"><label asp-for="PublisherId" class="form-label"></label><select asp-for="PublisherId" asp-items="Model.PublisherOptions" class="form-select"></select></div></div>

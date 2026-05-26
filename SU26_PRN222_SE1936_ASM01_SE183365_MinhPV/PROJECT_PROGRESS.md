@@ -894,3 +894,66 @@ Step 11 PASSED
 Step 12 PASSED
 Step 13 PASSED
 ```
+
+### 2026-05-26: MinhPV Source Naming Alignment
+
+Status: Completed locally on branch `developer`. Not pushed in this step.
+
+Purpose:
+- Align source-code naming with the team ownership rule for MinhPV's assigned area.
+- Focus MinhPV's scope on Journal + Category Management rather than broad project features.
+
+MinhPV responsibility:
+- CRUD publisher.
+- CRUD journal.
+- CRUD category.
+- Assign journal to category.
+
+Database tables:
+- `Publishers`
+- `Journals_MinhPV`
+- `Categories_MinhPV`
+- `JournalCategories_MinhPV`
+
+Renamed source files/folders:
+- `Controllers/PublishersController.cs` -> `Controllers/Publishers_MinhPVController.cs`
+- `Controllers/JournalsController.cs` -> `Controllers/Journals_MinhPVController.cs`
+- `Controllers/CategoriesController.cs` -> `Controllers/Categories_MinhPVController.cs`
+- `Views/Publishers` -> `Views/Publishers_MinhPV`
+- `Views/Journals` -> `Views/Journals_MinhPV`
+- `Views/Categories` -> `Views/Categories_MinhPV`
+- `ViewModels/JournalFormViewModel.cs` -> `ViewModels/Journal_MinhPVFormViewModel.cs`
+
+Class/reference updates:
+- `Publishers_MinhPVController`
+- `Journals_MinhPVController`
+- `Categories_MinhPVController`
+- `Journal_MinhPVFormViewModel`
+- Admin menu now points to:
+  - `/Publishers_MinhPV`
+  - `/Journals_MinhPV`
+  - `/Categories_MinhPV`
+- Admin dashboard journal card now points to `Journals_MinhPV`.
+- The older scaffolded journal controller was renamed to `Journals_MinhPVLegacyController` to avoid leaving a journal controller with inconsistent MinhPV naming.
+
+Verification:
+
+```text
+dotnet build Scientific.WebAppMVC/Scientific.WebAppMVC.csproj
+Build succeeded.
+0 Warning(s)
+0 Error(s)
+
+Unauthenticated route check:
+/Journals_MinhPV          -> redirects to Login
+/Categories_MinhPV        -> redirects to Login
+/Publishers_MinhPV        -> redirects to Login
+/Journals_MinhPV/Create   -> redirects to Login
+/Categories_MinhPV/Create -> redirects to Login
+/Publishers_MinhPV/Create -> redirects to Login
+
+Admin browser check:
+/Journals_MinhPV   -> OK
+/Categories_MinhPV -> OK
+/Publishers_MinhPV -> OK
+```
