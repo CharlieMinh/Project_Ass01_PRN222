@@ -7,11 +7,11 @@ using Scientific.WebAppMVC.Authorization;
 namespace Scientific.WebAppMVC.Controllers
 {
     [Authorize(Policy = AppPolicies.AdminOnly)]
-    public class CategoriesController : Controller
+    public class Categories_MinhPVController : Controller
     {
         private readonly ScientificJournalTrendDBContext _context;
 
-        public CategoriesController(ScientificJournalTrendDBContext context) => _context = context;
+        public Categories_MinhPVController(ScientificJournalTrendDBContext context) => _context = context;
 
         public async Task<IActionResult> Index(string? search)
         {

@@ -9,11 +9,11 @@ using Scientific.WebAppMVC.ViewModels;
 namespace Scientific.WebAppMVC.Controllers
 {
     [Authorize(Policy = AppPolicies.AdminOnly)]
-    public class JournalsController : Controller
+    public class Journals_MinhPVController : Controller
     {
         private readonly ScientificJournalTrendDBContext _context;
 
-        public JournalsController(ScientificJournalTrendDBContext context) => _context = context;
+        public Journals_MinhPVController(ScientificJournalTrendDBContext context) => _context = context;
 
         public async Task<IActionResult> Index(string? search)
         {
@@ -58,7 +58,7 @@ namespace Scientific.WebAppMVC.Controllers
                 EntityName = journal.JournalName,
                 PageTitle = "Assign Categories",
                 OptionLabel = "Categories",
-                BackController = "Journals",
+                BackController = "Journals_MinhPV",
                 SelectedIds = selectedIds,
                 Options = await _context.CategoriesMinhPvs
                     .OrderBy(x => x.CategoryName)
@@ -107,7 +107,7 @@ namespace Scientific.WebAppMVC.Controllers
 
         public async Task<IActionResult> Create()
         {
-            var model = new JournalFormViewModel
+            var model = new Journal_MinhPVFormViewModel
             {
                 PublisherOptions = await BuildPublisherOptionsAsync()
             };
@@ -116,7 +116,7 @@ namespace Scientific.WebAppMVC.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(JournalFormViewModel model)
+        public async Task<IActionResult> Create(Journal_MinhPVFormViewModel model)
         {
             if (!ModelState.IsValid)
             {
@@ -150,7 +150,7 @@ namespace Scientific.WebAppMVC.Controllers
             var journal = await _context.JournalsMinhPvs.FindAsync(id);
             if (journal == null) return NotFound();
 
-            var model = new JournalFormViewModel
+            var model = new Journal_MinhPVFormViewModel
             {
                 JournalId = journal.JournalIdMinhPv,
                 JournalName = journal.JournalName,
@@ -171,7 +171,7 @@ namespace Scientific.WebAppMVC.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, JournalFormViewModel model)
+        public async Task<IActionResult> Edit(int id, Journal_MinhPVFormViewModel model)
         {
             if (model.JournalId != id) return BadRequest();
             if (!ModelState.IsValid)
