@@ -592,9 +592,39 @@ Completed:
 
 ### Step 10: Code Search Paper + Paper Detail
 
-Planned:
-- Search paper by keyword, author, journal, and publication year.
-- Show paper detail with authors, journal, keywords, metrics, DOI, abstract, and links.
+Status: Completed.
+
+Completed:
+- Added `/Papers/Search` with GET query string filters:
+  - Search text across title, abstract, and keyword name.
+  - Author name.
+  - Journal dropdown.
+  - Publication year.
+- Added paper search result cards with detail links, journal/year/citation metadata, open access badge, and login-only bookmark button placeholder.
+- Reworked `/Papers/Details/{id}` to use a dedicated detail view model.
+- Paper detail now shows title, DOI, journal, publisher, publication metadata, authors, keywords, abstract, metrics, paper URL, PDF URL, and login-only bookmark state.
+- Detail action now creates `PaperMetrics` when missing and increments `ViewCount` on each valid detail visit.
+- Search and detail are accessible for normal demo users, while paper CRUD and many-to-many assignment actions remain protected by the `DataManager` policy.
+
+Files changed:
+- `Scientific.WebAppMVC/Controllers/PapersController.cs`
+- `Scientific.WebAppMVC/ViewModels/Papers/PaperSearchViewModel.cs`
+- `Scientific.WebAppMVC/ViewModels/Papers/PaperResultViewModel.cs`
+- `Scientific.WebAppMVC/ViewModels/Papers/PaperDetailViewModel.cs`
+- `Scientific.WebAppMVC/Views/Papers/Search.cshtml`
+- `Scientific.WebAppMVC/Views/Papers/Details.cshtml`
+- `Scientific.WebAppMVC/Views/_ViewImports.cshtml`
+
+Verification:
+- `dotnet build Scientific.WebAppMVC/Scientific.WebAppMVC.csproj` succeeded with 0 errors.
+- `GET /Papers/Search` without filters returns 200 and shows the empty search form.
+- Search by title/text, abstract text, keyword name, author name, journal id, publication year, and combined filters returns 200.
+- `GET /Papers/Details/1` returns 200 and shows detail sections plus metrics.
+- `GET /Papers/Details/999999` returns 404.
+- `PaperMetrics.ViewCount` increments after opening a valid detail page.
+
+Known limitations:
+- Bookmark action itself is still planned for Step 13. Step 10 only shows the bookmark button/state where required.
 
 ## Notes For Future Updates
 

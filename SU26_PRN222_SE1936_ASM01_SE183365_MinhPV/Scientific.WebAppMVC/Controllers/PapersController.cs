@@ -5,17 +5,79 @@ using Microsoft.EntityFrameworkCore;
 using Scientific.Entities.Models;
 using Scientific.WebAppMVC.Authorization;
 using Scientific.WebAppMVC.ViewModels;
+using Scientific.WebAppMVC.ViewModels.Papers;
 using System.Security.Claims;
 
 namespace Scientific.WebAppMVC.Controllers
 {
-    [Authorize(Policy = AppPolicies.DataManager)]
     public class PapersController : Controller
     {
         private readonly ScientificJournalTrendDBContext _context;
 
         public PapersController(ScientificJournalTrendDBContext context) => _context = context;
 
+        [AllowAnonymous]
+        [HttpGet]
+        public async Task<IActionResult> Search([FromQuery] PaperSearchViewModel model)
+        {
+            model.Journals = await BuildSearchJournalOptionsAsync();
+
+            if (!HasSearchFilters(model))
+            {
+                model.Results = new List<PaperResultViewModel>();
+                return View(model);
+            }
+
+            var query = _context.PapersBaoTgs
+                .AsNoTracking()
+                .Include(x => x.JournalIdMinhPvNavigation)
+                .Include(x => x.PaperMetric)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(model.SearchText))
+            {
+                var searchText = model.SearchText.Trim();
+                query = query.Where(x =>
+                    x.Title.Contains(searchText) ||
+                    (x.Abstract != null && x.Abstract.Contains(searchText)) ||
+                    x.Keywords.Any(k => k.KeywordName.Contains(searchText)));
+            }
+
+            if (!string.IsNullOrWhiteSpace(model.AuthorName))
+            {
+                var authorName = model.AuthorName.Trim();
+                query = query.Where(x => x.PaperAuthorsBaoTgs
+                    .Any(pa => pa.AuthorIdBaoTgNavigation.FullName.Contains(authorName)));
+            }
+
+            if (model.JournalId.HasValue)
+            {
+                query = query.Where(x => x.JournalIdMinhPv == model.JournalId.Value);
+            }
+
+            if (model.PublicationYear.HasValue)
+            {
+                query = query.Where(x => x.PublicationYear == model.PublicationYear.Value);
+            }
+
+            model.Results = await query
+                .OrderByDescending(x => x.PublicationYear)
+                .ThenBy(x => x.Title)
+                .Select(x => new PaperResultViewModel
+                {
+                    PaperId = x.PaperIdBaoTg,
+                    Title = x.Title,
+                    JournalName = x.JournalIdMinhPvNavigation != null ? x.JournalIdMinhPvNavigation.JournalName : null,
+                    PublicationYear = x.PublicationYear,
+                    CitationCount = x.PaperMetric != null ? x.PaperMetric.CitationCount : 0,
+                    IsOpenAccess = x.IsOpenAccess
+                })
+                .ToListAsync();
+
+            return View(model);
+        }
+
+        [Authorize(Policy = AppPolicies.DataManager)]
         public async Task<IActionResult> Index(string? search)
         {
             var query = _context.PapersBaoTgs.Include(x => x.JournalIdMinhPvNavigation).AsQueryable();
@@ -30,18 +92,96 @@ namespace Scientific.WebAppMVC.Controllers
             return View(await query.OrderByDescending(x => x.PublicationYear).ThenBy(x => x.Title).ToListAsync());
         }
 
+        [AllowAnonymous]
         public async Task<IActionResult> Details(int id)
         {
             var paper = await _context.PapersBaoTgs
+                .AsNoTracking()
                 .Include(x => x.JournalIdMinhPvNavigation)
-                .Include(x => x.CreatedByHuyDdNavigation)
-                .Include(x => x.PaperMetric)
-                .Include(x => x.PaperAuthorsBaoTgs).ThenInclude(x => x.AuthorIdBaoTgNavigation)
-                .Include(x => x.Keywords)
+                    .ThenInclude(x => x.Publisher)
                 .FirstOrDefaultAsync(x => x.PaperIdBaoTg == id);
-            return paper == null ? NotFound() : View(paper);
+
+            if (paper == null)
+            {
+                return NotFound();
+            }
+
+            var authors = await _context.PaperAuthorsBaoTgs
+                .AsNoTracking()
+                .Where(x => x.PaperIdBaoTg == id)
+                .OrderBy(x => x.AuthorOrder)
+                .Select(x => x.AuthorIdBaoTgNavigation.FullName)
+                .ToListAsync();
+
+            var keywords = await _context.PapersBaoTgs
+                .AsNoTracking()
+                .Where(x => x.PaperIdBaoTg == id)
+                .SelectMany(x => x.Keywords)
+                .OrderBy(x => x.KeywordName)
+                .Select(x => x.KeywordName)
+                .ToListAsync();
+
+            var metric = await _context.PaperMetrics
+                .AsTracking()
+                .FirstOrDefaultAsync(x => x.PaperIdBaoTg == id);
+
+            if (metric == null)
+            {
+                metric = new PaperMetric
+                {
+                    PaperIdBaoTg = id,
+                    CitationCount = 0,
+                    ViewCount = 0,
+                    DownloadCount = 0,
+                    BookmarkCount = 0,
+                    LastUpdated = DateTime.Now
+                };
+                _context.PaperMetrics.Add(metric);
+            }
+
+            metric.ViewCount += 1;
+            metric.LastUpdated = DateTime.Now;
+            await _context.SaveChangesAsync();
+
+            var currentUserId = GetCurrentUserId();
+            var isBookmarked = false;
+            if (currentUserId.HasValue)
+            {
+                isBookmarked = await _context.Bookmarks
+                    .AsNoTracking()
+                    .AnyAsync(x => x.PaperIdBaoTg == id && x.UserIdHuyDd == currentUserId.Value);
+            }
+
+            var model = new PaperDetailViewModel
+            {
+                PaperId = paper.PaperIdBaoTg,
+                Title = paper.Title,
+                Abstract = paper.Abstract,
+                DOI = paper.Doi,
+                JournalName = paper.JournalIdMinhPvNavigation?.JournalName,
+                PublisherName = paper.JournalIdMinhPvNavigation?.Publisher?.PublisherName,
+                PublicationYear = paper.PublicationYear,
+                PublicationDate = paper.PublicationDate?.ToDateTime(TimeOnly.MinValue),
+                Volume = paper.Volume,
+                Issue = paper.Issue,
+                Pages = paper.Pages,
+                PaperUrl = paper.PaperUrl,
+                PdfUrl = paper.PdfUrl,
+                SourceName = paper.SourceName,
+                IsOpenAccess = paper.IsOpenAccess,
+                Authors = authors,
+                Keywords = keywords,
+                CitationCount = metric.CitationCount,
+                ViewCount = metric.ViewCount,
+                DownloadCount = metric.DownloadCount,
+                BookmarkCount = metric.BookmarkCount,
+                IsBookmarkedByCurrentUser = isBookmarked
+            };
+
+            return View(model);
         }
 
+        [Authorize(Policy = AppPolicies.DataManager)]
         public async Task<IActionResult> AssignAuthors(int id)
         {
             var paper = await _context.PapersBaoTgs
@@ -79,6 +219,7 @@ namespace Scientific.WebAppMVC.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = AppPolicies.DataManager)]
         public async Task<IActionResult> AssignAuthors(int id, ManyToManyAssignmentViewModel model)
         {
             var paperExists = await _context.PapersBaoTgs.AnyAsync(x => x.PaperIdBaoTg == id);
@@ -115,6 +256,7 @@ namespace Scientific.WebAppMVC.Controllers
             return RedirectToAction(nameof(Details), new { id });
         }
 
+        [Authorize(Policy = AppPolicies.DataManager)]
         public async Task<IActionResult> AssignKeywords(int id)
         {
             var paper = await _context.PapersBaoTgs
@@ -152,6 +294,7 @@ namespace Scientific.WebAppMVC.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = AppPolicies.DataManager)]
         public async Task<IActionResult> AssignKeywords(int id, ManyToManyAssignmentViewModel model)
         {
             var paper = await _context.PapersBaoTgs
@@ -181,6 +324,7 @@ namespace Scientific.WebAppMVC.Controllers
             return RedirectToAction(nameof(Details), new { id });
         }
 
+        [Authorize(Policy = AppPolicies.DataManager)]
         public async Task<IActionResult> Create()
         {
             return View(new PaperFormViewModel { JournalOptions = await BuildJournalOptionsAsync() });
@@ -188,6 +332,7 @@ namespace Scientific.WebAppMVC.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = AppPolicies.DataManager)]
         public async Task<IActionResult> Create(PaperFormViewModel model)
         {
             if (model.PublicationYear == null && model.PublicationDate.HasValue)
@@ -225,6 +370,7 @@ namespace Scientific.WebAppMVC.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        [Authorize(Policy = AppPolicies.DataManager)]
         public async Task<IActionResult> Edit(int id)
         {
             var paper = await _context.PapersBaoTgs.FindAsync(id);
@@ -253,6 +399,7 @@ namespace Scientific.WebAppMVC.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = AppPolicies.DataManager)]
         public async Task<IActionResult> Edit(int id, PaperFormViewModel model)
         {
             if (model.PaperId != id) return BadRequest();
@@ -289,6 +436,7 @@ namespace Scientific.WebAppMVC.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        [Authorize(Policy = AppPolicies.DataManager)]
         public async Task<IActionResult> Delete(int id)
         {
             var paper = await _context.PapersBaoTgs
@@ -299,6 +447,7 @@ namespace Scientific.WebAppMVC.Controllers
 
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = AppPolicies.DataManager)]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var paper = await _context.PapersBaoTgs.FindAsync(id);
@@ -314,6 +463,23 @@ namespace Scientific.WebAppMVC.Controllers
                 TempData["ErrorMessage"] = "Cannot delete this paper because related records exist.";
             }
             return RedirectToAction(nameof(Index));
+        }
+
+        private static bool HasSearchFilters(PaperSearchViewModel model)
+        {
+            return !string.IsNullOrWhiteSpace(model.SearchText) ||
+                !string.IsNullOrWhiteSpace(model.AuthorName) ||
+                model.JournalId.HasValue ||
+                model.PublicationYear.HasValue;
+        }
+
+        private async Task<List<SelectListItem>> BuildSearchJournalOptionsAsync()
+        {
+            return await _context.JournalsMinhPvs
+                .AsNoTracking()
+                .OrderBy(x => x.JournalName)
+                .Select(x => new SelectListItem { Value = x.JournalIdMinhPv.ToString(), Text = x.JournalName })
+                .ToListAsync();
         }
 
         private async Task<List<SelectListItem>> BuildJournalOptionsAsync()
